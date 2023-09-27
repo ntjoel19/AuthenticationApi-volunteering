@@ -1,0 +1,25 @@
+application:
+  security:
+    jwt:
+      secret-key: 6b6352676669353653613078705477737957726a79704f71317a447844414263
+      expiration: 86400000 # a day
+      refresh-token:
+        expiration: 604800000 # 7 days
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/users_auth
+    username: postgres
+    password: namek
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+
