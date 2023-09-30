@@ -1,0 +1,94 @@
+openapi: 3.0.0
+info:
+  title: Authentication API
+  description: This is an authentication service based on jwt. Here we provide a documentation for the API.
+  version: 1.0.0
+  contact:
+    name: NamekSoft
+    email: ntjoel19@yahoo.fr
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /register:
+    post:
+      summary: Returns the acces token.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Bad request
+  /authenticate:
+    post:
+      summary: Authenticate a user and get a JWT token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAuthenticationRequest'
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token
+        '401':
+          description: Unauthorized
+  /users:
+    get:
+      summary: Get a list of all users
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+components:
+  schemas:
+    UserRegistrationRequest:
+      type: object
+      properties:
+        firstname:
+          type: string
+          description: The user's first name
+        lastname:
+          type: string
+          description: the user's lasat name
+        email:
+          type: string
+          description: A valid email
+        password:
+          type: string
+          description: User's password
+    UserAuthenticationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: a valid email
+        password:
+          type: string
+          description: User's password
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: User's ID
+    
+security:
+  - BearerAuth: []
