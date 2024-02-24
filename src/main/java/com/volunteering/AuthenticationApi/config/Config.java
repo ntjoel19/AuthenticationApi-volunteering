@@ -4,6 +4,7 @@ import jakarta.servlet.Filter;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,17 +20,16 @@ import com.volunteering.AuthenticationApi.user.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class Config {
-    //@Getter
-    //private static String secretKey;
 
     private final UserRepository repository;
 
     @Bean
     public UserDetailsService userDetailsService() {
+        log.info("entering User dertail service" );
         return username -> repository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
@@ -39,6 +39,7 @@ public class Config {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
+        log.info("Auth provider {}", authProvider );
         return authProvider;
     }
 
@@ -52,7 +53,4 @@ public class Config {
         return new BCryptPasswordEncoder();
     }
 
-    //public void setSecretKey(String secretKey) {
-       // Config.secretKey = secretKey;
-    //}
 }

@@ -25,14 +25,17 @@ public class User implements UserDetails {
      private Integer id;
      private String firstname;
      private String lastname;
+     @Column(unique = true)
      private String email;
      private String password;
+     private boolean emailVerified;
+     private String verificationToken;
 
      @Enumerated(EnumType.STRING)
      private Role role;
 
      @OneToMany(mappedBy = "user")
-     private List<Token> tokens;
+     private transient List<Token> tokens;
 
      @Override
      public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.lang.NonNull;
 
 import java.io.IOException;
+
 @Component
 @RequiredArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
@@ -26,32 +27,33 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NonNull  HttpServletRequest request,
-            @NonNull  HttpServletResponse response,
-            @NonNull  FilterChain filterChain
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         if (request.getServletPath().contains("/api/v1/auth")) {
+            logger.info("doFilterInternal Request URI is: " + request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
         final String authHeader = request.getHeader("Authorization");//getting the bearer token from the request header
         final String jwt;
         final String userEmail;
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         jwt = authHeader.substring(7);//7 because we don't want the word 'Bearer ' (which has 7 letters) to be part of the token
-        userEmail =jwtService.extractUsername(jwt); //extract the userEmail from JWT token
+        userEmail = jwtService.extractUsername(jwt); //extract the userEmail from JWT token
 
         //SecurityContextHolder.getContext().getAuthentication() == null means that the user is not yet connected
-        if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            var isTokenValid = tokenRepository.findByToken(jwt)
+            tokenRepository.findByToken(jwt)
                     .map(t -> !t.isExpired() && !t.isRevoked())
                     .orElse(false);
-            if(jwtService.isTokenValid(jwt, userDetails)) {
+            if (jwtService.isTokenValid(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

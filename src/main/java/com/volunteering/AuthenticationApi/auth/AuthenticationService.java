@@ -11,14 +11,18 @@ import com.volunteering.AuthenticationApi.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -28,17 +32,26 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+    private User user;
+    private Authentication authentication;
+
     public AuthenticationResponse register(RegisterRequest request) {
 
         var user = User.builder()
                 .firstname(request.getFirstname())
                 .lastname(request.getLastname())
+                .emailVerified(false)
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
                 .build();
-        var savedUser = repository.save(user);
-        var jwtToken =jwtService.generateToken(user);
+        var jwtToken = jwtService.generateToken(user);
+        user.setVerificationToken(jwtToken);
+        //this.saveUserToken(user, jwtToken);
+        repository.save(user);
+
+        // Send an email with the verification link containing the token
+        //TO DO : sendVerificationEmail(user.getEmail(), verificationToken);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
@@ -46,24 +59,26 @@ public class AuthenticationService {
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         try {
-            authenticationManager.authenticate(
+            this.authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getEmail(),
                             request.getPassword()
                     )
             );
+            log.info("AuthenticationService.authenticate: authentication object : {} ", this.authentication);
+
         } catch (Exception e) {
             System.out.println(e);
         }
-        //System.out.println(request.getEmail());
-        var  user = repository.findByEmail(request.getEmail())
+
+        this.user = repository.findByEmailAndPassword(request.getEmail(), request.getPassword())
                 .orElseThrow();
+        log.info("AuthenticationService.authenticate: Fetch user from database returns : {} ", this.user);
         var jwrToken =jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwrToken)
                 .build();
     }
-
     private void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()
                 .user(user)

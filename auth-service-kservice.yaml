@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8085
+      targetPort: 8085
+      NodePort : 30085
+  selector:
+    app: auth-service
